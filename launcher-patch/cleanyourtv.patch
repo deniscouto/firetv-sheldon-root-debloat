@@ -1,0 +1,149 @@
+diff --git a/launcher/app/src/main/java/com/gathin/tvhome/AppAdapter.java b/launcher/app/src/main/java/com/gathin/tvhome/AppAdapter.java
+index e208aa8..32799cd 100644
+--- a/launcher/app/src/main/java/com/gathin/tvhome/AppAdapter.java
++++ b/launcher/app/src/main/java/com/gathin/tvhome/AppAdapter.java
+@@ -271,6 +271,23 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+                 if (ri.activityInfo != null && added.contains(ri.activityInfo.packageName)
+                         && seen.add(ri.activityInfo.packageName)) found.add(ri);
+             }
++            // A package with no launchable activity at all (e.g. a settings app whose screens are only
++            // reachable by action, never by category.LAUNCHER) still gets a tile when it has a launch_actions
++            // override: the tile's own base intent is synthetic and is never started, since launch() always
++            // replaces it with the launch_actions intent before calling startActivity (#this build's bluetooth fix).
++            for (String pkg : added) {
++                if (!seen.add(pkg) || !launchActions.containsKey(pkg)) continue;
++                try {
++                    ResolveInfo synthetic = new ResolveInfo();
++                    android.content.pm.ActivityInfo info = new android.content.pm.ActivityInfo();
++                    info.applicationInfo = pm.getApplicationInfo(pkg, 0);
++                    info.packageName = pkg;
++                    info.name = ".";
++                    info.exported = true;
++                    synthetic.activityInfo = info;
++                    found.add(synthetic);
++                } catch (PackageManager.NameNotFoundException ignored) { }
++            }
+         }
+         Map<String, Cards.Card> cardByPkg = new HashMap<>();
+         for (Cards.Card c : cards) cardByPkg.put(c.pkg, c);
+diff --git a/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java b/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
+index d992768..9c1c8c7 100644
+--- a/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
++++ b/launcher/app/src/main/java/com/gathin/tvhome/MainActivity.java
+@@ -680,6 +680,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
+ 
+         btnInputs = findViewById(R.id.btnInputs);
+         View btnSettings = findViewById(R.id.btnSettings);
++        View btnBluetooth = findViewById(R.id.btnBluetooth);
++        btnBluetooth.setOnClickListener(v -> {
++            Intent bt = new Intent("android.settings.CONTROLLERS_SETTINGS")
++                    .setPackage("com.amazon.tv.settings.v2").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++            try {
++                if (getPackageManager().resolveActivity(bt, 0) != null) startActivity(bt);
++            } catch (ActivityNotFoundException ignored) { }
++        });
+         btnInputs.setOnClickListener(v -> showInputs());
+         btnWifi.setOnClickListener(v -> openNetworkPill());
+         btnWifi.setOnLongClickListener(v -> {
+@@ -768,12 +776,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
+         };
+         btnInputs.setOnKeyListener(pillKeys);
+         btnWifi.setOnKeyListener(pillKeys);
++        btnBluetooth.setOnKeyListener(pillKeys);
+         btnSettings.setOnKeyListener(pillKeys);
+         btnReorder.setOnKeyListener(pillKeys);
+         btnLibraryTop.setOnKeyListener(pillKeys);
+         for (View button : topAppButtons) button.setOnKeyListener(pillKeys);
+         if (advancedEffects) {
+-            List<View> pills = new ArrayList<>(Arrays.asList(btnInputs, btnWifi, btnReorder, btnLibraryTop, btnSettings));
++            List<View> pills = new ArrayList<>(Arrays.asList(btnInputs, btnWifi, btnBluetooth, btnReorder, btnLibraryTop, btnSettings));
+             pills.addAll(topAppButtons);
+             for (View button : pills) {
+                 button.setOnFocusChangeListener((view, focused) -> view.animate()
+diff --git a/launcher/app/src/main/res/layout/activity_main.xml b/launcher/app/src/main/res/layout/activity_main.xml
+index 3980580..bc3fcda 100644
+--- a/launcher/app/src/main/res/layout/activity_main.xml
++++ b/launcher/app/src/main/res/layout/activity_main.xml
+@@ -354,6 +354,13 @@
+                     android:drawableStart="@drawable/ic_apps_pill"
+                     android:nextFocusDown="@+id/grid" />
+ 
++                <TextView
++                    android:id="@+id/btnBluetooth"
++                    style="@style/TopButton"
++                    android:text="@string/bluetooth"
++                    android:drawableStart="@drawable/ic_bluetooth"
++                    android:nextFocusDown="@+id/grid" />
++
+                 <TextView
+                     android:id="@+id/btnSettings"
+                     style="@style/TopButton"
+diff --git a/launcher/app/src/main/res/values-pt/strings.xml b/launcher/app/src/main/res/values-pt/strings.xml
+index d59c4fb..e404234 100644
+--- a/launcher/app/src/main/res/values-pt/strings.xml
++++ b/launcher/app/src/main/res/values-pt/strings.xml
+@@ -4,6 +4,7 @@
+     <string name="inputs">Entradas</string>
+     <string name="wifi">Wi-Fi</string>
+     <string name="settings">Configurações</string>
++    <string name="bluetooth">Bluetooth</string>
+     <string name="choose_input">Entradas</string>
+     <string name="connected">Conectado</string>
+     <string name="standby">Em espera</string>
+diff --git a/launcher/app/src/main/res/values/config.xml b/launcher/app/src/main/res/values/config.xml
+index 8dbd32b..6c17209 100644
+--- a/launcher/app/src/main/res/values/config.xml
++++ b/launcher/app/src/main/res/values/config.xml
+@@ -12,7 +12,7 @@
+     <string-array name="settings_fallback_components" translatable="false">
+         <item>com.xiaomi.mitv.settings/com.xiaomi.mitv.settings.entry.MainActivity</item>
+         <item>com.tcl.settings/com.tcl.settings.ui.MainActivity</item>
+-        <item>com.amazon.tv.launcher/com.amazon.tv.launcher.ui.MainSettingsActivity</item>
++        <item>com.amazon.tv.settings.v2/com.amazon.tv.settings.v2.tv.device.DeviceActivity</item>
+     </string-array>
+ 
+     <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
+@@ -21,6 +21,7 @@
+         <item>com.amazon.amazonvideo.livingroom</item>
+         <item>com.google.android.youtube.tv</item>
+         <item>in.startv.hotstar</item>
++        <item>com.amazon.venezia</item>
+     </string-array>
+     <!-- With fewer dock_apps than columns (or a dock app that is not installed), the free dock slots take
+          the first grid apps, so the dock never shows a gap. false leaves them empty (#162); a theme can
+@@ -65,6 +66,7 @@
+          A tile whose action no longer resolves opens the app normally. MagentaTV's program guide:
+          com.telekom.onetv.tv.pl=com.telekom.onetv.tv.pl.action.PROGRAM_GUIDE. -->
+     <string-array name="launch_actions">
++        <item>com.amazon.venezia=com.amazon.venezia.ade.FEATURED_LAUNCH</item>
+     </string-array>
+ 
+     <!-- A tile's name instead of the app's own: "package=Name". It also shows above the dock. -->
+@@ -73,6 +75,7 @@
+     <!-- A tile's artwork instead of the app's banner: "package=drawable", a banner_* drawable bundled with the
+          launcher (res/drawable). banner_tv is a magenta field with the Live TV glyph. -->
+     <string-array name="app_banners">
++        <item>com.amazon.venezia=banner_venezia</item>
+     </string-array>
+ 
+     <!-- TVs with no TvInputManager have no HDMI list to read, but their own source-selection panel
+@@ -328,6 +331,7 @@
+          (many China-market TVs, e.g. Coocaa 8R145), a fresh Home with app_library on would otherwise be
+          nearly empty. Empty (off) by default, so existing setups change nothing. -->
+     <string-array name="library_apps" translatable="false">
++        <item>com.amazon.venezia</item>
+     </string-array>
+ 
+     <!-- Module cards: an app that declares a card (docs/specs/card.md) can stand in for its tile with its own
+diff --git a/launcher/app/src/main/res/values/strings.xml b/launcher/app/src/main/res/values/strings.xml
+index ad90112..14dc7f1 100644
+--- a/launcher/app/src/main/res/values/strings.xml
++++ b/launcher/app/src/main/res/values/strings.xml
+@@ -4,6 +4,7 @@
+     <string name="inputs">Inputs</string>
+     <string name="wifi">Wi-Fi</string>
+     <string name="settings">Settings</string>
++    <string name="bluetooth">Bluetooth</string>
+     <string name="choose_input">Inputs</string>
+     <string name="connected">Connected</string>
+     <string name="standby">Standby</string>
