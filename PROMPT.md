@@ -12,6 +12,70 @@ Repository: `https://github.com/deniscouto/firetv-sheldon-root-debloat`
 
 ---
 
+## Before you start: getting ADB access
+
+This part has to be done by hand, on the remote and the TV screen — an AI agent has no way to
+press buttons on your Fire TV or read its screen.
+
+### 1. Find the Fire TV's IP address
+
+On the Fire TV: **Settings → My Fire TV → About → Network** (on some Fire OS versions it's
+**Settings → Network**) shows the current Wi-Fi network and IP address directly.
+
+### 2. Turn on Developer Options
+
+**Settings → My Fire TV → About**, highlight the device's own name/build line (varies by Fire OS
+version — it's whichever line sits at the bottom, showing the device name or serial), and click
+the remote's select button **7 times quickly**. A "You are now a developer" toast confirms it; a
+new **Developer Options** entry appears one screen back, under **My Fire TV**.
+
+### 3. Turn on ADB debugging
+
+**Settings → My Fire TV → Developer Options → ADB debugging**, turn it on. Fire TV sticks have no
+USB host port, so this is always debugging over the network (Wi-Fi), not USB.
+
+### 4. Install `adb` on your computer
+
+It ships as part of Android's `platform-tools`.
+
+**Windows:**
+```powershell
+winget install --id Google.PlatformTools -e
+```
+(or download `platform-tools` manually from
+[developer.android.com/tools/releases/platform-tools](https://developer.android.com/tools/releases/platform-tools),
+unzip it, and add the folder to your `PATH`)
+
+**Linux:**
+```sh
+# Debian/Ubuntu
+sudo apt install android-sdk-platform-tools-common adb
+# Fedora
+sudo dnf install android-tools
+# Arch
+sudo pacman -S android-tools
+```
+(or the same manual `platform-tools` zip from Google, if your distro's package is too old)
+
+**macOS:**
+```sh
+brew install android-platform-tools
+```
+
+### 5. Connect and pair
+
+```sh
+adb connect <IP>:5555
+adb devices
+```
+
+The **first** time, a prompt appears **on the TV itself** — "Allow USB debugging?" with your
+computer's RSA key fingerprint. Accept it with the remote; tick "Always allow from this computer"
+so you don't have to repeat this on every reboot. Only once `adb devices` shows the device as
+`device` (not `unauthorized` or `offline`) are you ready for the prompt below.
+
+---
+
 ### Copy this prompt into your assistant:
 
 ```markdown

@@ -12,6 +12,72 @@ Repositório: `https://github.com/deniscouto/firetv-sheldon-root-debloat`
 
 ---
 
+## Antes de começar: conseguindo acesso via ADB
+
+Essa parte precisa ser feita na mão, com o controle remoto e olhando a tela da TV — um agente de
+IA não tem como apertar botões na sua Fire TV nem ler a tela dela.
+
+### 1. Descobrir o IP da Fire TV
+
+Na Fire TV: **Configurações → Minha Fire TV → Sobre → Rede** (em algumas versões de Fire OS é
+**Configurações → Rede**) mostra a rede Wi-Fi atual e o endereço IP diretamente.
+
+### 2. Ativar as Opções do desenvolvedor
+
+**Configurações → Minha Fire TV → Sobre**, selecione a linha com o nome/build do aparelho (varia
+por versão de Fire OS — é a linha que fica embaixo, mostrando o nome do aparelho ou número de
+série), e clique no botão de selecionar do controle **7 vezes rápido**. Uma mensagem "Agora você
+é um desenvolvedor" confirma; uma nova opção **Opções do desenvolvedor** aparece uma tela atrás,
+dentro de **Minha Fire TV**.
+
+### 3. Ativar a depuração ADB
+
+**Configurações → Minha Fire TV → Opções do desenvolvedor → Depuração ADB**, ative. Os sticks de
+Fire TV não têm porta USB host, então isso é sempre depuração via rede (Wi-Fi), não USB.
+
+### 4. Instalar o `adb` no seu computador
+
+Ele vem junto com o `platform-tools` do Android.
+
+**Windows:**
+```powershell
+winget install --id Google.PlatformTools -e
+```
+(ou baixe o `platform-tools` manualmente em
+[developer.android.com/tools/releases/platform-tools](https://developer.android.com/tools/releases/platform-tools),
+descompacte, e adicione a pasta ao `PATH`)
+
+**Linux:**
+```sh
+# Debian/Ubuntu
+sudo apt install android-sdk-platform-tools-common adb
+# Fedora
+sudo dnf install android-tools
+# Arch
+sudo pacman -S android-tools
+```
+(ou o mesmo zip manual do `platform-tools` da Google, se o pacote da sua distro estiver muito
+desatualizado)
+
+**macOS:**
+```sh
+brew install android-platform-tools
+```
+
+### 5. Conectar e parear
+
+```sh
+adb connect <IP>:5555
+adb devices
+```
+
+Na **primeira** vez, aparece um aviso **na própria TV** — "Permitir depuração USB?" com a
+impressão digital da chave RSA do seu computador. Aceite com o controle; marque "Sempre permitir
+deste computador" pra não precisar repetir isso a cada reboot. Só quando `adb devices` mostrar o
+aparelho como `device` (não `unauthorized` nem `offline`) você está pronto para o prompt abaixo.
+
+---
+
 ### Copie este prompt no seu assistente:
 
 ```markdown
