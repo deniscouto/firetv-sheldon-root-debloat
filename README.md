@@ -7,6 +7,10 @@ stock launcher with [CleanYourTV](https://github.com/Gathin23/cleanyourtv), incl
 launcher patches: showing the Amazon Appstore (and other non-"TV" packages) as a tile with its
 real artwork, and a dedicated Bluetooth/Controllers button in the top bar.
 
+**Have a different Fire TV model or Fire OS version?** [`PROMPT.md`](PROMPT.md) is written to
+paste into an AI coding agent and have it check your specific device's compatibility first,
+rather than assuming it matches this exact one.
+
 Everything here was done against the **exact device and firmware build below** — if you have the
 same (or very close) model/build, this should apply directly. If you're on something else, it may
 still help, but check compatibility first (see [Root](#1-root-ghostlock)).

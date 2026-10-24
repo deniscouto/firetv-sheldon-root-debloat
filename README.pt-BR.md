@@ -8,6 +8,10 @@ incluindo dois pequenos patches no launcher: mostrar a Amazon Appstore (e outros
 são "de TV") como um ícone com a arte real, e um botão dedicado de Bluetooth/Controles na barra
 superior.
 
+**Tem outro modelo de Fire TV ou outra versão de Fire OS?** O [`PROMPT.pt-BR.md`](PROMPT.pt-BR.md)
+é feito para colar num agente de IA e fazê-lo checar a compatibilidade do seu aparelho específico
+primeiro, em vez de assumir que é igual a este.
+
 Tudo aqui foi feito contra o **modelo e build de firmware exatos abaixo** — se você tem o mesmo
 aparelho (ou um build bem próximo), isso deve se aplicar diretamente. Se for outro modelo, ainda
 pode ajudar, mas confira a compatibilidade primeiro (veja [Root](#1-root-ghostlock)).
