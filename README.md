@@ -1,5 +1,7 @@
 # Fire TV Stick Lite (sheldon) — root + debloat + clean launcher
 
+*[Leia em português](README.pt-BR.md)*
+
 A full write-up of rooting an Amazon Fire TV Stick Lite, removing bloatware, and replacing the
 stock launcher with [CleanYourTV](https://github.com/Gathin23/cleanyourtv), including two small
 launcher patches: showing the Amazon Appstore (and other non-"TV" packages) as a tile with its
